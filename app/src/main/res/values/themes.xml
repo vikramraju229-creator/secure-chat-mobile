@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.SecureChat" parent="Theme.MaterialComponents.NoActionBar">
-        <item name="colorPrimary">#009dff</item>
+        <item name="colorPrimary">#00a884</item>
         <item name="colorOnPrimary">#ffffff</item>
-        <item name="colorPrimaryDark">#1a1a2e</item>
-        <item name="android:statusBarColor">#0d0d1a</item>
-        <item name="android:navigationBarColor">#0d0d1a</item>
+        <item name="colorPrimaryDark">#202c33</item>
+        <item name="android:statusBarColor">#202c33</item>
+        <item name="android:navigationBarColor">#0b141a</item>
     </style>
 </resources>

@@ -32,11 +32,11 @@ class DoubleRatchet {
             ByteArray(32),
             sharedSecret,
             "SecureChat-DoubleRatchet-Init",
-            64
+            96
         )
         RK = derived.copyOfRange(0, 32)
         CKs = derived.copyOfRange(32, 64)
-        CKr = derived.copyOfRange(32, 64)
+        CKr = derived.copyOfRange(64, 96)
         DHRs = CryptoUtils.generateKeyPair()
         DHRr = null
         Ns = 0; Nr = 0; PN = 0; _dhRatchetCount = 0
@@ -55,7 +55,7 @@ class DoubleRatchet {
         val ad = CryptoUtils.concat(
             "SecureChat-DoubleRatchet".encodeToByteArray(),
             ourDhrPub, theirDhrPub,
-            byteArrayOf(msgNum.toByte())
+            byteArrayOf((msgNum shr 24).toByte(), (msgNum shr 16).toByte(), (msgNum shr 8).toByte(), msgNum.toByte())
         )
 
         val ciphertext = CryptoUtils.aesEncrypt(mk, plaintext, iv, ad)
@@ -92,7 +92,7 @@ class DoubleRatchet {
         val ad = CryptoUtils.concat(
             "SecureChat-DoubleRatchet".encodeToByteArray(),
             dhrPub, ourDhrPub,
-            byteArrayOf(msgNum.toByte())
+            byteArrayOf((msgNum shr 24).toByte(), (msgNum shr 16).toByte(), (msgNum shr 8).toByte(), msgNum.toByte())
         )
         return CryptoUtils.aesDecrypt(mk, ciphertext, iv, ad)
     }
@@ -148,8 +148,8 @@ class DoubleRatchet {
         val pubBytes = state["DHRsPub"] as ByteArray
         val kf = KeyFactory.getInstance("EC")
         DHRs = KeyPair(
-            kf.generatePrivate(java.security.spec.PKCS8EncodedKeySpec(privBytes)),
-            kf.generatePublic(X509EncodedKeySpec(pubBytes))
+            kf.generatePublic(X509EncodedKeySpec(pubBytes)),
+            kf.generatePrivate(java.security.spec.PKCS8EncodedKeySpec(privBytes))
         )
         DHRr = (state["DHRr"] as ByteArray).takeIf { it.isNotEmpty() }
         Ns = state["Ns"] as Int
