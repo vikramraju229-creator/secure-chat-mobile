@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "YOUR_PROJECT_NUMBER",
-    "project_id": "YOUR_PROJECT_ID",
-    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
+    "project_number": "97020522414",
+    "project_id": "chat-8d3c9",
+    "storage_bucket": "chat-8d3c9.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "YOUR_APP_ID",
+        "mobilesdk_app_id": "1:97020522414:android:faa7e8e897fd6b0fdd623f",
         "android_client_info": {
           "package_name": "com.securechat.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "YOUR_API_KEY"
+          "current_key": "AIzaSyAeW4zK-3BNJNixaAp9P1fKMfxRK49XfGE"
         }
       ],
       "services": {
