@@ -3,3 +3,4 @@ build/
 local.properties
 release.keystore
 *.apk
+app/google-services.json
