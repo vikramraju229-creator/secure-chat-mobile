@@ -7,8 +7,7 @@ APP_HOME=$(cd "$DIRNAME" && pwd)
 
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
-# Use Java 17 for Android build compatibility
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+# Use Java 17 for Android build compatibility — JAVA_HOME is set by GitHub Actions / environment
 export JAVA_HOME
 
-exec $JAVA_HOME/bin/java -Xmx64m -Xms64m -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
+exec java -Xmx64m -Xms64m -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
