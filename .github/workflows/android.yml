@@ -1,171 +1,39 @@
-# =============================================================================
-# SecureChat Android — CI Build Workflow (Release + Debug)
-# =============================================================================
-# Triggers:
-#   - push to main
-#   - pull_request to main
-#   - manual dispatch (with build type selection)
-#
-# All 5 required GitHub Secrets must be set in the repository:
-#   GOOGLE_SERVICES_JSON   — Full content of app/google-services.json
-#   KEYSTORE_BASE64        — Base64-encoded release.keystore
-#   KEYSTORE_PASS          — Keystore password
-#   KEY_ALIAS              — Key alias
-#   KEY_PASS               — Key password
-# =============================================================================
-
-name: Build SecureChat APK
-
+name: Build Android APK
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
-    inputs:
-      build_type:
-        description: 'Build type'
-        required: true
-        default: 'release'
-        type: choice
-        options:
-          - release
-          - debug
-
-env:
-  GRADLE_OPTS: >
-    -Dorg.gradle.daemon=false
-    -Dorg.gradle.parallel=true
-    -Dorg.gradle.caching=true
-    -Dorg.gradle.configureondemand=true
-  GRADLE_USER_HOME: ${{ github.workspace }}/.gradle
 
 jobs:
   build:
-    name: ${{ github.event.inputs.build_type || 'release' }} APK
     runs-on: ubuntu-latest
-
     steps:
-      # -----------------------------------------------------------------------
-      # 1. Checkout
-      # -----------------------------------------------------------------------
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # -----------------------------------------------------------------------
-      # 2. Set up JDK 17
-      # -----------------------------------------------------------------------
+      - uses: actions/checkout@v4
+      
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      # -----------------------------------------------------------------------
-      # 3. Restore Gradle cache (wrapper + dependencies)
-      # -----------------------------------------------------------------------
-      - name: Cache Gradle wrapper
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.GRADLE_USER_HOME }}/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-wrapper-
-
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.GRADLE_USER_HOME }}/caches
-            ${{ env.GRADLE_USER_HOME }}/notifications
-          key: ${{ runner.os }}-gradle-cache-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-cache-
-
-      # -----------------------------------------------------------------------
-      # 4. Decode release keystore from secret (must happen BEFORE local.properties)
-      # -----------------------------------------------------------------------
-      - name: Decode release keystore
+          
+      - name: Fix gradlew Java path
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
-          echo "release.keystore restored ($(wc -c < release.keystore) bytes)"
-
-      # -----------------------------------------------------------------------
-      # 5. Inject google-services.json
-      # -----------------------------------------------------------------------
-      - name: Inject google-services.json
-        run: |
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
-          echo "google-services.json injected"
-
-      # -----------------------------------------------------------------------
-      # 6. Generate local.properties with signing credentials
-      # -----------------------------------------------------------------------
-      - name: Generate local.properties
-        run: |
-          cat > local.properties << EOL
-          sdk.dir=$ANDROID_HOME
-          keystore.path=$(pwd)/release.keystore
-          keystore.password=${{ secrets.KEYSTORE_PASS }}
-          key.alias=${{ secrets.KEY_ALIAS }}
-          key.password=${{ secrets.KEY_PASS }}
-          EOL
-          echo "local.properties generated with release signing config"
-
-      # -----------------------------------------------------------------------
-      # 7. Grant Gradle executable permission
-      # -----------------------------------------------------------------------
-      - name: Grant Gradle wrapper permission
-        run: chmod +x ./gradlew
-
-      # -----------------------------------------------------------------------
-      # 8. Determine build task
-      # -----------------------------------------------------------------------
-      - name: Determine build task
-        id: build_type
-        run: |
-          BT="${{ github.event.inputs.build_type }}"
-          if [ -z "$BT" ]; then BT="release"; fi
-          echo "task=assemble${BT^}" >> $GITHUB_OUTPUT
-          echo "Building: assemble${BT^}"
-
-      # -----------------------------------------------------------------------
-      # 9. Build APK
-      # -----------------------------------------------------------------------
+          export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+          
+      - name: Add google-services.json
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+          
+      - name: Grant execute permission
+        run: chmod +x gradlew
+        
       - name: Build APK
-        run: ./gradlew ${{ steps.build_type.outputs.task }} --no-daemon --stacktrace
-        env:
-          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
-          KEY_PASS: ${{ secrets.KEY_PASS }}
-
-      # -----------------------------------------------------------------------
-      # 10. Upload APK
-      # -----------------------------------------------------------------------
-      - name: Upload Debug APK
-        if: steps.build_type.outputs.task == 'assembleDebug'
+        run: |
+          export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+          ./gradlew assembleDebug --no-daemon
+        
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: SecureChat-Debug
+          name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
-          compression-level: 0
-          if-no-files-found: error
-
-      - name: Upload Release APK (signed)
-        if: steps.build_type.outputs.task == 'assembleRelease'
-        uses: actions/upload-artifact@v4
-        with:
-          name: SecureChat-Release-signed
-          path: app/build/outputs/apk/release/app-release.apk
-          compression-level: 0
-          if-no-files-found: error
-
-      # -----------------------------------------------------------------------
-      # 11. Upload ProGuard mapping (release only)
-      # -----------------------------------------------------------------------
-      - name: Upload ProGuard mapping
-        if: steps.build_type.outputs.task == 'assembleRelease'
-        uses: actions/upload-artifact@v4
-        with:
-          name: SecureChat-ProGuard-Mapping
-          path: app/build/outputs/mapping/release/mapping.txt
-          if-no-files-found: warn
