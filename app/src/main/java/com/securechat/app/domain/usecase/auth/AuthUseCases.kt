@@ -64,34 +64,26 @@ class LogoutUseCase @Inject constructor(private val repository: AuthRepository) 
     }
 }
 
-class GenerateOtpUseCase @Inject constructor(private val repository: AuthRepository) {
-    /**
-     * Generates a 6-digit OTP, stores it in Firestore under users/{uid}/otp,
-     * and returns the code. In production this code is sent to the user's email
-     * via a Cloud Function; for development it is logged.
-     */
-    suspend operator fun invoke(uid: String): Result<String> {
-        return repository.generateAndStoreOtp(uid)
+class SendEmailVerificationUseCase @Inject constructor(private val repository: AuthRepository) {
+    suspend operator fun invoke(): Result<Unit> {
+        return repository.sendEmailVerification()
     }
 }
 
-class VerifyOtpUseCase @Inject constructor(private val repository: AuthRepository) {
+class CheckEmailVerifiedUseCase @Inject constructor(private val repository: AuthRepository) {
     /**
-     * Verifies the provided OTP code against Firestore.
-     * Returns true if correct and not expired.
-     * On success, marks emailVerified in Firestore.
+     * Reloads the Firebase user to get the latest isEmailVerified status,
+     * then returns the result. This picks up verification immediately
+     * after the user clicks the link in their email.
      */
-    suspend operator fun invoke(uid: String, code: String): Result<Boolean> {
-        return repository.verifyOtp(uid, code)
+    suspend operator fun invoke(): Boolean {
+        return repository.reloadUserAndCheckVerified()
     }
 }
 
-class ResendOtpUseCase @Inject constructor(private val repository: AuthRepository) {
-    /**
-     * Generates a fresh OTP and overwrites the previous one in Firestore.
-     */
-    suspend operator fun invoke(uid: String): Result<String> {
-        return repository.resendOtp(uid)
+class ResendVerificationEmailUseCase @Inject constructor(private val repository: AuthRepository) {
+    suspend operator fun invoke(): Result<Unit> {
+        return repository.resendVerificationEmail()
     }
 }
 

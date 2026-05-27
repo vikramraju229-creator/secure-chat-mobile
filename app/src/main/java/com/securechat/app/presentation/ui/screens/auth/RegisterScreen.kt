@@ -30,10 +30,10 @@ fun RegisterScreen(navController: NavController) {
     val hasNumber = password.any { it.isDigit() }
     val hasSpecialChar = password.any { "!@#\$%^&*".contains(it) }
 
-    // Navigate to OTP verification screen on successful registration
-    LaunchedEffect(uiState.otpSent) {
-        if (uiState.otpSent) {
-            navController.navigate("otp_verification") {
+    // Navigate to verification screen on successful registration
+    LaunchedEffect(uiState.verificationEmailSent) {
+        if (uiState.verificationEmailSent) {
+            navController.navigate("email_verification") {
                 popUpTo("register") { inclusive = true }
             }
         }

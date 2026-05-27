@@ -87,9 +87,9 @@ class FirebaseAuthManager(private val auth: FirebaseAuth?) {
     }
 
     /**
-     * Sends a Firebase email verification (legacy method).
-     * Note: We now use OTP-based verification stored in Firestore.
-     * This method is kept for sending notification emails.
+     * Sends a Firebase email verification link.
+     * No ActionCodeSettings / Dynamic Links — plain sendEmailVerification()
+     * works without any deprecation issues.
      */
     suspend fun sendEmailVerification(): Result<Unit> {
         return try {
@@ -104,6 +104,25 @@ class FirebaseAuthManager(private val auth: FirebaseAuth?) {
         } catch (e: Exception) {
             Log.w(TAG, "sendEmailVerification failed", e)
             Result.failure(AuthException("Failed to send verification email"))
+        }
+    }
+
+    /**
+     * Reloads the Firebase user then returns isEmailVerified.
+     * Must be called after the user clicks the verification link
+     * so we get the updated status from the server.
+     */
+    suspend fun reloadUserAndCheckVerified(): Boolean {
+        return try {
+            if (!isFirebaseReady()) return false
+            val user = auth?.currentUser ?: return false
+            withContext(Dispatchers.IO) {
+                user.reload().await()
+            }
+            auth?.currentUser?.isEmailVerified ?: false
+        } catch (e: Exception) {
+            Log.w(TAG, "reloadUser failed", e)
+            auth?.currentUser?.isEmailVerified ?: false
         }
     }
 

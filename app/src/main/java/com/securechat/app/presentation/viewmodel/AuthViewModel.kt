@@ -20,8 +20,7 @@ data class AuthUiState(
     // Registration flow
     val registrationEmail: String = "",
     val registeredUserId: String = "",
-    val otpSent: Boolean = false,
-    val otpCode: String = "", // visible in debug builds only; in production sent via email
+    val verificationEmailSent: Boolean = false,
     val emailVerified: Boolean = false,
     // Profile setup
     val needsProfileSetup: Boolean = false,
@@ -39,9 +38,9 @@ class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val registerUseCase: RegisterUseCase,
     private val logoutUseCase: LogoutUseCase,
-    private val generateOtpUseCase: GenerateOtpUseCase,
-    private val verifyOtpUseCase: VerifyOtpUseCase,
-    private val resendOtpUseCase: ResendOtpUseCase,
+    private val sendEmailVerificationUseCase: SendEmailVerificationUseCase,
+    private val resendVerificationEmailUseCase: ResendVerificationEmailUseCase,
+    private val checkEmailVerifiedUseCase: CheckEmailVerifiedUseCase,
     private val sendPasswordResetUseCase: SendPasswordResetUseCase,
     private val checkUsernameAvailableUseCase: CheckUsernameAvailableUseCase,
     private val saveUserProfileUseCase: SaveUserProfileUseCase,
@@ -130,20 +129,13 @@ class AuthViewModel @Inject constructor(
                 }
                 result
                     .onSuccess { user ->
-                        // Generate OTP and store in Firestore
-                        val otpResult = withContext(Dispatchers.IO) {
-                            generateOtpUseCase(user.userId)
-                        }
-                        val otpCode = otpResult.getOrNull() ?: ""
-
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
                                 user = user,
                                 isSuccess = false, // DO NOT navigate to main app — must verify email first
                                 error = null,
-                                otpSent = true,
-                                otpCode = otpCode,
+                                verificationEmailSent = true,
                                 registrationEmail = user.email,
                                 registeredUserId = user.userId,
                                 emailVerified = false
@@ -160,83 +152,59 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    /** Verify the OTP code the user entered against Firestore. */
-    fun verifyOtp(code: String) {
-        val uid = _uiState.value.registeredUserId.ifBlank {
-            _uiState.value.user?.userId ?: run {
-                _uiState.update { it.copy(error = "No user session found") }
-                return
-            }
-        }
-
+    /**
+     * Reloads the Firebase user then checks isEmailVerified.
+     * Called when user taps "I verified my email".
+     */
+    fun checkEmailVerification() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val result = withContext(Dispatchers.IO) {
-                    verifyOtpUseCase(uid, code)
+                val verified = withContext(Dispatchers.IO) {
+                    checkEmailVerifiedUseCase()
                 }
-                result
-                    .onSuccess { verified ->
-                        if (verified) {
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    emailVerified = true,
-                                    needsProfileSetup = true,
-                                    isSuccess = false
-                                )
-                            }
-                        } else {
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    error = "Incorrect code. Please try again."
-                                )
-                            }
-                        }
+                if (verified) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            emailVerified = true,
+                            needsProfileSetup = true,
+                            isSuccess = false
+                        )
                     }
-                    .onFailure { e ->
-                        _uiState.update { it.copy(isLoading = false, error = e.message) }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Email not verified yet. Please check your inbox (and spam folder), then click the link."
+                        )
                     }
+                }
             } catch (e: Exception) {
-                Log.e(TAG, "verifyOtp failed", e)
-                _uiState.update { it.copy(isLoading = false, error = "Failed to verify code") }
+                Log.e(TAG, "checkEmailVerification failed", e)
+                _uiState.update { it.copy(isLoading = false, error = "Failed to check verification status") }
             }
         }
     }
 
-    /** Resend (regenerate) the OTP code. */
-    fun resendOtp() {
-        val uid = _uiState.value.registeredUserId.ifBlank {
-            _uiState.value.user?.userId ?: run {
-                _uiState.update { it.copy(error = "No user session found") }
-                return
-            }
-        }
-
+    /** Resend the verification email. */
+    fun resendVerificationEmail() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 val result = withContext(Dispatchers.IO) {
-                    resendOtpUseCase(uid)
+                    resendVerificationEmailUseCase()
                 }
                 result
-                    .onSuccess { newCode ->
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                error = null,
-                                otpSent = true,
-                                otpCode = newCode
-                            )
-                        }
+                    .onSuccess {
+                        _uiState.update { it.copy(isLoading = false, error = null, verificationEmailSent = true) }
                     }
                     .onFailure { e ->
                         _uiState.update { it.copy(isLoading = false, error = e.message) }
                     }
             } catch (e: Exception) {
-                Log.e(TAG, "resendOtp failed", e)
-                _uiState.update { it.copy(isLoading = false, error = "Failed to resend code") }
+                Log.e(TAG, "resendVerificationEmail failed", e)
+                _uiState.update { it.copy(isLoading = false, error = "Failed to resend verification email") }
             }
         }
     }
