@@ -175,6 +175,10 @@ class AuthRepositoryImpl @Inject constructor(
         return firebaseAuthManager.isEmailVerified()
     }
 
+    override suspend fun reloadUserAndCheckVerified(): Boolean {
+        return firebaseAuthManager.reloadUserAndCheckVerified()
+    }
+
     override suspend fun resendVerificationEmail(): Result<Unit> {
         return firebaseAuthManager.sendEmailVerification()
     }

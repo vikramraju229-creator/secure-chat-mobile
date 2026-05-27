@@ -71,8 +71,13 @@ class SendEmailVerificationUseCase @Inject constructor(private val repository: A
 }
 
 class CheckEmailVerifiedUseCase @Inject constructor(private val repository: AuthRepository) {
+    /**
+     * Reloads the Firebase user first to get the latest isEmailVerified status,
+     * then returns the result. This ensures the app picks up verification
+     * immediately after the user clicks the link.
+     */
     suspend operator fun invoke(): Boolean {
-        return repository.isEmailVerified()
+        return repository.reloadUserAndCheckVerified()
     }
 }
 
