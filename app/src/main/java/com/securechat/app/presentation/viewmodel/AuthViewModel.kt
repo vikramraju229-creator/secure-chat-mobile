@@ -38,7 +38,6 @@ class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val registerUseCase: RegisterUseCase,
     private val logoutUseCase: LogoutUseCase,
-    private val sendEmailVerificationUseCase: SendEmailVerificationUseCase,
     private val checkEmailVerifiedUseCase: CheckEmailVerifiedUseCase,
     private val resendVerificationEmailUseCase: ResendVerificationEmailUseCase,
     private val sendPasswordResetUseCase: SendPasswordResetUseCase,

@@ -1,6 +1,6 @@
 package com.securechat.app.di
 
-import com.securechat.app.core.security.KeystoreManager
+import com.securechat.app.core.security.AesKeyManager
 import com.securechat.app.core.security.SecurityManager
 import dagger.Module
 import dagger.Provides
@@ -14,11 +14,11 @@ object SecurityModule {
 
     @Provides
     @Singleton
-    fun provideKeystoreManager(): KeystoreManager = KeystoreManager()
+    fun provideAesKeyManager(): AesKeyManager = AesKeyManager()
 
     @Provides
     @Singleton
-    fun provideSecurityManager(keystoreManager: KeystoreManager): SecurityManager {
-        return SecurityManager(keystoreManager)
+    fun provideSecurityManager(aesKeyManager: AesKeyManager): SecurityManager {
+        return SecurityManager(aesKeyManager)
     }
 }

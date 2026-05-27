@@ -153,6 +153,18 @@ class ChatRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun unlockChat(chatId: Long): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                chatDao.unlockChat(chatId)
+                Result.success(Unit)
+            } catch (e: Exception) {
+                Log.e(TAG, "unlockChat failed", e)
+                Result.failure(Exception("Failed to unlock chat: ${e.message}"))
+            }
+        }
+    }
 }
 
 // Extension functions for entity <-> domain mapping

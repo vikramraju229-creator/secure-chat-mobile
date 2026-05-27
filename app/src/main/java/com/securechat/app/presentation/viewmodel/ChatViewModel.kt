@@ -155,6 +155,24 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Unlock a chat directly (used when the creator skips the secret question flow).
+     */
+    fun unlockChat(chatId: Long) {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    chatRepository.unlockChat(chatId)
+                }
+                result.onSuccess {
+                    loadChat(chatId)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "unlockChat failed", e)
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }

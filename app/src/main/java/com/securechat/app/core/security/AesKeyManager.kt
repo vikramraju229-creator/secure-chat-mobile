@@ -6,7 +6,14 @@ import java.security.KeyStore
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 
-class KeystoreManager {
+/**
+ * Manages the AES-256 master key stored in Android KeyStore.
+ * This key is used for local data encryption (EncryptedSharedPreferences, etc.).
+ *
+ * Note: This is distinct from [com.securechat.app.crypto.KeyStoreManager]
+ * which manages EC P-256 identity key pairs for ECDH key exchange.
+ */
+class AesKeyManager {
     private val KEY_ALIAS = "secure_chat_master_key"
     private val ANDROID_KEYSTORE = "AndroidKeyStore"
 

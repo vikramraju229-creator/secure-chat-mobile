@@ -18,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec
  *  - Delegates to [CryptoUtils] for network-level Double Ratchet operations
  */
 class SecurityManager(
-    private val keystoreManager: KeystoreManager
+    private val aesKeyManager: AesKeyManager
 ) {
     companion object {
         private const val TAG = "SecurityManager"
@@ -34,7 +34,7 @@ class SecurityManager(
      * Returns IV + ciphertext (prepended for convenient storage).
      */
     fun encryptLocal(data: ByteArray): ByteArray {
-        val masterKey = keystoreManager.getOrCreateMasterKey()
+        val masterKey = aesKeyManager.getOrCreateMasterKey()
         val cipher = Cipher.getInstance(AES_GCM)
         cipher.init(Cipher.ENCRYPT_MODE, masterKey)
         val iv = cipher.iv
@@ -47,7 +47,7 @@ class SecurityManager(
      * Expects input as IV (12 bytes) + ciphertext.
      */
     fun decryptLocal(encryptedData: ByteArray): ByteArray {
-        val masterKey = keystoreManager.getOrCreateMasterKey()
+        val masterKey = aesKeyManager.getOrCreateMasterKey()
         val iv = encryptedData.sliceArray(0 until IV_LENGTH)
         val ciphertext = encryptedData.sliceArray(IV_LENGTH until encryptedData.size)
         val cipher = Cipher.getInstance(AES_GCM)

@@ -19,8 +19,8 @@ class SecureWebSocket(
     private val authToken: String? = null
 ) {
     // Internal structured scope tied to this WebSocket's lifecycle.
-    // Cancelled when disconnect() is called, preventing coroutine leaks.
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    // Recreated on connect() so disconnect() + reconnect() works correctly.
+    private var scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var ws: WebSocket? = null
     // TLS: rely on Android system trust store (no custom certificate pinning).
     // network_security_config.xml enforces system certs + blocks cleartext.
@@ -52,6 +52,9 @@ class SecureWebSocket(
     private var reconnectAttempts = 0
 
     fun connect() {
+        // Recreate scope so disconnect() + reconnect() works correctly
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
         _users.value = emptyList()
         _connectionState.value = false
         _myId.value = ""

@@ -159,6 +159,7 @@ fun SetupSecretQuestionScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             TextButton(onClick = {
+                chatViewModel.unlockChat(chatId)
                 navController.navigate("chat/$chatId/$partnerId") {
                     popUpTo("chat_list")
                 }

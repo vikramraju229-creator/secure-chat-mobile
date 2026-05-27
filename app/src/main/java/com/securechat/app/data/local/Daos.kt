@@ -43,6 +43,9 @@ interface ChatDao {
 
     @Query("SELECT * FROM chats WHERE chatId = :chatId")
     suspend fun getChatByIdSync(chatId: Long): ChatEntity?
+
+    @Query("UPDATE chats SET isLocked = 0 WHERE chatId = :chatId")
+    suspend fun unlockChat(chatId: Long)
 }
 
 @Dao

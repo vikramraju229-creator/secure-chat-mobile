@@ -31,6 +31,7 @@ interface ChatRepository {
     suspend fun createChat(partnerId: String): Result<Chat>
     suspend fun setSecretQuestion(chatId: Long, question: String, answerHash: String): Result<Unit>
     suspend fun verifySecretAnswer(chatId: Long, answerHash: String): Result<Boolean>
+    suspend fun unlockChat(chatId: Long): Result<Unit>
     fun getChatById(chatId: Long): Flow<Chat?>
 }
 
