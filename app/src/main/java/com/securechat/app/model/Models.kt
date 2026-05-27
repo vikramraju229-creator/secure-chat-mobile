@@ -19,7 +19,7 @@ data class IncomingMessage(
     val dhrPub: String? = null,
     val msgNum: Int? = null,
     val id: String? = null,
-    val users: List<User>? = null,
+    val users: List<PeerUser>? = null,
     val from: String? = null,
     val text: String? = null
 )
