@@ -11,8 +11,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { 
-            url = uri("https://zetetic.net/sqlcipher/maven") 
-            isAllowInsecureProtocol = true
+            url = uri("https://zetetic.net/sqlcipher/maven")
         }
     }
 }

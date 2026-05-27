@@ -3,6 +3,7 @@ package com.securechat.app.presentation.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.securechat.app.core.security.SecurityManager
 import com.securechat.app.domain.model.Chat
 import com.securechat.app.domain.model.Message
 import com.securechat.app.domain.repository.ChatRepository
@@ -11,9 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.security.MessageDigest
-import javax.crypto.Cipher
-import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
 
 data class ChatUiState(
@@ -28,7 +26,8 @@ data class ChatUiState(
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val securityManager: SecurityManager
 ) : ViewModel() {
 
     companion object {
@@ -161,32 +160,15 @@ class ChatViewModel @Inject constructor(
     }
 
     /**
-     * Per-chat encryption: derive a unique key from chat ID
-     * so messages in different chats cannot be read across chats.
+     * Per-chat encryption via SecurityManager (HKDF-based with user entropy).
+     * Uses a fixed "self" user ID since local encryption is for the local user's storage.
      */
     private fun encryptPerChatMessage(chatId: Long, content: String): String {
-        return try {
-            val chatKey = deriveChatKey(chatId)
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.ENCRYPT_MODE, chatKey)
-            val iv = cipher.iv
-            val encrypted = cipher.doFinal(content.toByteArray(Charsets.UTF_8))
-            // Return iv + ciphertext as hex
-            (iv + encrypted).joinToString("") { "%02x".format(it) }
-        } catch (e: Exception) {
-            Log.w(TAG, "encryptPerChatMessage failed, using plaintext fallback", e)
-            "ENC_ERR:$content"
-        }
-    }
-
-    private fun deriveChatKey(chatId: Long): SecretKeySpec {
-        val seed = "SecureChat_PerChatKey_v1_$chatId".toByteArray(Charsets.UTF_8)
-        val hash = MessageDigest.getInstance("SHA-256").digest(seed)
-        return SecretKeySpec(hash, "AES")
+        return securityManager.encryptPerChatMessage(chatId, "self", content)
     }
 
     private fun sha256(input: String): String {
-        val digest = MessageDigest.getInstance("SHA-256")
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
         return digest.digest(input.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
     }
 }

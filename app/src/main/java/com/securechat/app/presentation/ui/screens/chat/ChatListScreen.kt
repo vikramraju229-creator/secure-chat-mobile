@@ -33,8 +33,8 @@ fun ChatListScreen(navController: NavController) {
         val chatId = uiState.createdChatId
         if (chatId != null && chatId > 0) {
             viewModel.clearCreatedChat()
-            // Navigate to secret question setup with placeholder partner name
-            navController.navigate("setup_secret_question/$chatId/${partnerIdInput.ifBlank { "Partner" }}")
+            // Navigate to secret question setup
+            navController.navigate("setup_secret_question/$chatId/${partnerIdInput.ifBlank { "Unknown" }}")
             partnerIdInput = ""
         }
     }
@@ -158,7 +158,7 @@ fun ChatItem(chat: Chat, onClick: () -> Unit) {
         modifier = Modifier.clickable { onClick() },
         headlineContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(chat.partnerId)
+                Text("Chat with ${chat.partnerId.take(8)}")
                 if (chat.isLocked) {
                     Spacer(modifier = Modifier.width(6.dp))
                     Icon(

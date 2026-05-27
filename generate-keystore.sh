@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-KEYSTORE_FILE="release.keystore"
-KEYSTORE_PASS="securechat123"
-KEY_ALIAS="securechat"
-KEY_PASS="securechat123"
+# SECURITY: Read passwords from environment variables with fallback to prompt.
+# NEVER hardcode passwords in version-controlled scripts.
+KEYSTORE_FILE="${KEYSTORE_FILE:-release.keystore}"
+KEY_ALIAS="${KEY_ALIAS:-securechat}"
+
+if [ -z "${KEYSTORE_PASS:-}" ]; then
+  echo -n "Enter keystore password: "
+  read -rs KEYSTORE_PASS
+  echo
+fi
+
+if [ -z "${KEY_PASS:-}" ]; then
+  echo -n "Enter key password: "
+  read -rs KEY_PASS
+  echo
+fi
 
 echo "Generating release keystore..."
 keytool -genkey -v -keystore "$KEYSTORE_FILE" \
@@ -19,10 +31,10 @@ keytool -genkey -v -keystore "$KEYSTORE_FILE" \
 echo ""
 echo "Keystore generated: $KEYSTORE_FILE"
 echo ""
-echo "Add these to local.properties:"
+echo "Add these to local.properties (or set as CI secrets):"
 echo "  keystore.path=$(pwd)/$KEYSTORE_FILE"
 echo "  keystore.password=$KEYSTORE_PASS"
 echo "  key.alias=$KEY_ALIAS"
 echo "  key.password=$KEY_PASS"
 echo ""
-echo "WARNING: For production, use strong passwords and back up the keystore file!"
+echo "SECURITY: For production, use strong unique passwords and back up the keystore file!"

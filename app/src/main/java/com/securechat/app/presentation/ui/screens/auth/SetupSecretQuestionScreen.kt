@@ -3,6 +3,7 @@ package com.securechat.app.presentation.ui.screens.auth
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +19,7 @@ import com.securechat.app.presentation.viewmodel.ChatViewModel
 fun SetupSecretQuestionScreen(
     navController: NavController,
     chatId: Long,
-    partnerName: String
+    partnerId: String
 ) {
     val chatViewModel: ChatViewModel = hiltViewModel()
     val uiState by chatViewModel.uiState.collectAsState()
@@ -37,7 +38,7 @@ fun SetupSecretQuestionScreen(
     LaunchedEffect(uiState.chat) {
         val chat = uiState.chat
         if (chat != null && chat.secretQuestion != null && chat.creatorVerified) {
-            navController.navigate("chat/$chatId/$partnerName") {
+            navController.navigate("chat/$chatId/$partnerId") {
                 popUpTo("chat_list")
             }
         }
@@ -63,13 +64,26 @@ fun SetupSecretQuestionScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "🔒 Chat Security",
-                style = MaterialTheme.typography.headlineSmall
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Chat Security",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Set a secret question for $partnerName.\nBoth of you must answer it correctly to unlock this chat.",
+                text = "Set a secret question for this chat.\nBoth participants must answer it correctly to unlock the conversation.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -145,7 +159,7 @@ fun SetupSecretQuestionScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             TextButton(onClick = {
-                navController.navigate("chat/$chatId/$partnerName") {
+                navController.navigate("chat/$chatId/$partnerId") {
                     popUpTo("chat_list")
                 }
             }) {

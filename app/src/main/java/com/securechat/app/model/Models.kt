@@ -1,6 +1,6 @@
 package com.securechat.app.model
 
-data class User(
+data class PeerUser(
     val id: String,
     val publicKey: String
 )

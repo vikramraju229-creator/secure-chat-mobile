@@ -4,7 +4,9 @@ import android.util.Log
 import com.securechat.app.crypto.CryptoUtils
 import com.securechat.app.crypto.DoubleRatchet
 import com.securechat.app.crypto.KeyStoreManager
-import com.securechat.app.model.*
+import com.securechat.app.model.ChatMessage
+import com.securechat.app.model.PeerUser
+import com.securechat.app.model.SealedMessage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,8 +16,11 @@ import org.json.JSONObject
 
 class SecureWebSocket(
     private val serverUrl: String,
-    private val scope: CoroutineScope
+    private val authToken: String? = null
 ) {
+    // Internal structured scope tied to this WebSocket's lifecycle.
+    // Cancelled when disconnect() is called, preventing coroutine leaks.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var ws: WebSocket? = null
     // TLS: rely on Android system trust store (no custom certificate pinning).
     // network_security_config.xml enforces system certs + blocks cleartext.
@@ -29,8 +34,8 @@ class SecureWebSocket(
     private val _connectionState = MutableStateFlow(false)
     val connectionState: StateFlow<Boolean> = _connectionState
 
-    private val _users = MutableStateFlow<List<User>>(emptyList())
-    val users: StateFlow<List<User>> = _users
+    private val _users = MutableStateFlow<List<PeerUser>>(emptyList())
+    val users: StateFlow<List<PeerUser>> = _users
 
     private val _myId = MutableStateFlow("")
     val myId: StateFlow<String> = _myId
@@ -56,7 +61,11 @@ class SecureWebSocket(
         reconnectAttempts = 0
         identityKeyPair = KeyStoreManager.getOrGenerateIdentityKeyPair()
 
-        val request = Request.Builder().url(serverUrl).build()
+        val requestBuilder = Request.Builder().url(serverUrl)
+        if (!authToken.isNullOrBlank()) {
+            requestBuilder.addHeader("Authorization", "Bearer $authToken")
+        }
+        val request = requestBuilder.build()
         ws = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(ws: WebSocket, response: Response) {
                 _connectionState.value = true
@@ -98,13 +107,13 @@ class SecureWebSocket(
                     sendPublicKey()
                 }
                 "users" -> {
-                    val usersList = mutableListOf<User>()
+                    val usersList = mutableListOf<PeerUser>()
                     val arr = json.getJSONArray("users")
                     for (i in 0 until arr.length()) {
                         val u = arr.getJSONObject(i)
                         val uid = u.getString("id")
                         if (uid != _myId.value) {
-                            usersList.add(User(uid, u.getString("publicKey")))
+                            usersList.add(PeerUser(uid, u.getString("publicKey")))
                         }
                     }
                     _users.value = usersList
@@ -136,7 +145,7 @@ class SecureWebSocket(
         ws?.send(msg.toString())
     }
 
-    private suspend fun setupRatchet(user: User) {
+    private suspend fun setupRatchet(user: PeerUser) {
         try {
             val keyFactory = java.security.KeyFactory.getInstance("EC")
             val theirPubKey = keyFactory.generatePublic(
@@ -226,6 +235,7 @@ class SecureWebSocket(
     fun disconnect() {
         reconnectJob?.cancel()
         typingResetJob?.cancel()
+        scope.cancel()
         ws?.close(1000, "User disconnected")
         ws = null
     }

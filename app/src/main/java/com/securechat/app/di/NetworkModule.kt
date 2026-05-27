@@ -5,7 +5,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.securechat.app.SecureChatApplication
 import com.securechat.app.data.remote.FirebaseAuthManager
 import com.securechat.app.data.remote.api.SecureChatApi
-import com.securechat.app.data.remote.websocket.SecureWebSocketClient
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -55,12 +54,6 @@ object NetworkModule {
     @Singleton
     fun provideSecureChatApi(retrofit: Retrofit): SecureChatApi {
         return retrofit.create(SecureChatApi::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideWebSocketClient(okHttpClient: OkHttpClient): SecureWebSocketClient {
-        return SecureWebSocketClient(okHttpClient)
     }
 
     @Provides

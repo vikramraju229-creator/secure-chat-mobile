@@ -3,4 +3,7 @@ build/
 local.properties
 release.keystore
 *.apk
+*.aab
 app/google-services.json
+lint/reports/
+lint/results/

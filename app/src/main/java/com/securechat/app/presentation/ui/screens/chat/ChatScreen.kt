@@ -23,13 +23,17 @@ import com.securechat.app.presentation.viewmodel.ChatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(navController: NavController, chatId: Long, partnerName: String) {
+fun ChatScreen(navController: NavController, chatId: Long, partnerId: String) {
     val viewModel: ChatViewModel = hiltViewModel()
     var messageText by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(chatId) {
         viewModel.loadChat(chatId)
+    }
+
+    // Separate effect: reactively load messages when chat becomes unlocked
+    LaunchedEffect(chatId, uiState.isLocked) {
         if (!uiState.isLocked) {
             viewModel.loadMessages(chatId)
         }
@@ -40,7 +44,7 @@ fun ChatScreen(navController: NavController, chatId: Long, partnerName: String) 
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(partnerName)
+                        Text("Chat")
                         if (uiState.isLocked) {
                             Spacer(modifier = Modifier.width(6.dp))
                             Icon(
@@ -98,7 +102,7 @@ fun ChatScreen(navController: NavController, chatId: Long, partnerName: String) 
                         )
                         Spacer(modifier = Modifier.height(24.dp))
                         Button(onClick = {
-                            navController.navigate("answer_secret_question/$chatId/$partnerName")
+                            navController.navigate("answer_secret_question/$chatId/$partnerId")
                         }) {
                             Text("Answer Secret Question")
                         }

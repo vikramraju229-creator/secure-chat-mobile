@@ -20,7 +20,7 @@ import com.securechat.app.presentation.viewmodel.ChatViewModel
 fun AnswerSecretQuestionScreen(
     navController: NavController,
     chatId: Long,
-    partnerName: String
+    partnerId: String
 ) {
     val chatViewModel: ChatViewModel = hiltViewModel()
     val uiState by chatViewModel.uiState.collectAsState()
@@ -36,7 +36,7 @@ fun AnswerSecretQuestionScreen(
     // Navigate to chat when unlocked
     LaunchedEffect(uiState.isLocked, uiState.answerResult) {
         if (!uiState.isLocked && uiState.answerResult == true) {
-            navController.navigate("chat/$chatId/$partnerName") {
+            navController.navigate("chat/$chatId/$partnerId") {
                 popUpTo("chat_list")
             }
         }
@@ -79,7 +79,7 @@ fun AnswerSecretQuestionScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "$partnerName has set a secret question.\nAnswer correctly to unlock the chat.",
+                    text = "Your chat partner has set a secret question.\nAnswer correctly to unlock the chat.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -63,49 +63,49 @@ fun SecureChatNavGraph(
 
         // Secret question setup (after creating a new chat)
         composable(
-            route = "setup_secret_question/{chatId}/{partnerName}",
+            route = "setup_secret_question/{chatId}/{partnerId}",
             arguments = listOf(
                 navArgument("chatId") { type = NavType.LongType },
-                navArgument("partnerName") { type = NavType.StringType }
+                navArgument("partnerId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val chatId = backStackEntry.arguments?.getLong("chatId") ?: 0L
-            val partnerName = backStackEntry.arguments?.getString("partnerName") ?: "Unknown"
+            val partnerId = backStackEntry.arguments?.getString("partnerId") ?: "Unknown"
             SetupSecretQuestionScreen(
                 navController = navController,
                 chatId = chatId,
-                partnerName = partnerName
+                partnerId = partnerId
             )
         }
 
         // Answer secret question (to unlock a locked chat)
         composable(
-            route = "answer_secret_question/{chatId}/{partnerName}",
+            route = "answer_secret_question/{chatId}/{partnerId}",
             arguments = listOf(
                 navArgument("chatId") { type = NavType.LongType },
-                navArgument("partnerName") { type = NavType.StringType }
+                navArgument("partnerId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val chatId = backStackEntry.arguments?.getLong("chatId") ?: 0L
-            val partnerName = backStackEntry.arguments?.getString("partnerName") ?: "Unknown"
+            val partnerId = backStackEntry.arguments?.getString("partnerId") ?: "Unknown"
             AnswerSecretQuestionScreen(
                 navController = navController,
                 chatId = chatId,
-                partnerName = partnerName
+                partnerId = partnerId
             )
         }
 
         // Chat screen
         composable(
-            route = "chat/{chatId}/{partnerName}",
+            route = "chat/{chatId}/{partnerId}",
             arguments = listOf(
                 navArgument("chatId") { type = NavType.LongType },
-                navArgument("partnerName") { type = NavType.StringType }
+                navArgument("partnerId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val chatId = backStackEntry.arguments?.getLong("chatId") ?: 0L
-            val partnerName = backStackEntry.arguments?.getString("partnerName") ?: "Unknown"
-            ChatScreen(navController = navController, chatId = chatId, partnerName = partnerName)
+            val partnerId = backStackEntry.arguments?.getString("partnerId") ?: "Unknown"
+            ChatScreen(navController = navController, chatId = chatId, partnerId = partnerId)
         }
 
         composable("profile") {

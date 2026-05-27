@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
+import com.securechat.app.core.utils.ScreenSecurityUtils
 import com.securechat.app.presentation.ui.SecureChatNavGraph
 import com.securechat.app.presentation.ui.theme.SecureChatTheme
 import com.securechat.app.presentation.viewmodel.AuthViewModel
@@ -35,6 +36,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         try {
             super.onCreate(savedInstanceState)
+
+            // Prevent screenshots and screen recording in the app
+            ScreenSecurityUtils.enableScreenshotProtection(this)
         } catch (e: Exception) {
             Log.e(TAG, "Error in super.onCreate", e)
         }

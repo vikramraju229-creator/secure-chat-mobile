@@ -23,6 +23,7 @@ class AuthRepositoryImpl @Inject constructor(
         private const val USERS_COLLECTION = "users"
     }
 
+    /** Firestore instance is nullable; all access goes through [withFirestore] for consistency. */
     private val firestore: FirebaseFirestore? by lazy {
         try {
             if (SecureChatApplication.isFirebaseAvailable()) {
@@ -34,21 +35,33 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Safely executes [block] with a non-null [FirebaseFirestore] reference.
+     * Returns [onError] (default: failure result) if Firestore is unavailable.
+     */
+    private suspend fun <T> withFirestore(
+        onError: Result<T> = Result.failure(AuthException("Firestore is not available")),
+        block: suspend (FirebaseFirestore) -> Result<T>
+    ): Result<T> {
+        val db = firestore
+        return if (db != null) block(db) else onError
+    }
+
     override suspend fun register(username: String, email: String, password: String): Result<User> {
         return withContext(Dispatchers.IO) {
             try {
                 Log.d(TAG, "register: attempting Firebase signUp for $email")
                 val firebaseUser = firebaseAuthManager.signUp(email, password)
 
-                // Update display name with username
-                val profileUpdate = firebaseUser.let { user ->
-                    com.google.firebase.auth.FirebaseAuth.getInstance().let { auth ->
-                        val currentUser = auth.currentUser
-                        val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
-                            .setDisplayName(username)
-                            .build()
-                        currentUser?.updateProfile(profileUpdates)?.await()
-                    }
+                // Update Firebase Auth display name
+                try {
+                    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                    val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                        .setDisplayName(username)
+                        .build()
+                    currentUser?.updateProfile(profileUpdates)?.await()
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to update display name during registration", e)
                 }
 
                 // Send email verification
@@ -173,14 +186,13 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun checkUsernameAvailable(username: String): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
-                if (firestore == null) {
-                    return@withContext Result.success(true) // If no Firestore, assume available
+                withFirestore(onError = Result.success(true)) { db ->
+                    val existing = db.collection(USERS_COLLECTION)
+                        .whereEqualTo("username", username)
+                        .get()
+                        .await()
+                    Result.success(existing.isEmpty)
                 }
-                val existing = firestore!!.collection(USERS_COLLECTION)
-                    .whereEqualTo("username", username)
-                    .get()
-                    .await()
-                Result.success(existing.isEmpty)
             } catch (e: Exception) {
                 Log.w(TAG, "checkUsernameAvailable failed", e)
                 Result.failure(AuthException("Failed to check username availability"))
@@ -198,36 +210,35 @@ class AuthRepositoryImpl @Inject constructor(
     ): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                if (firestore == null) {
-                    return@withContext Result.failure(AuthException("Firestore is not available"))
+                val result = withFirestore { db ->
+                    val profile = hashMapOf(
+                        "fullName" to fullName,
+                        "username" to username,
+                        "email" to email,
+                        "phone" to phone,
+                        "photoUrl" to photoUrl,
+                        "createdAt" to System.currentTimeMillis()
+                    )
+
+                    db.collection(USERS_COLLECTION).document(uid)
+                        .set(profile)
+                        .await()
+
+                    // Also update Firebase Auth display name
+                    try {
+                        val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                            .setDisplayName(fullName.ifBlank { username })
+                            .build()
+                        com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                            ?.updateProfile(profileUpdates)?.await()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to update display name", e)
+                    }
+
+                    Log.d(TAG, "Profile saved for user $uid")
+                    Result.success(Unit)
                 }
-
-                val profile = hashMapOf(
-                    "fullName" to fullName,
-                    "username" to username,
-                    "email" to email,
-                    "phone" to phone,
-                    "photoUrl" to photoUrl,
-                    "createdAt" to System.currentTimeMillis()
-                )
-
-                firestore!!.collection(USERS_COLLECTION).document(uid)
-                    .set(profile)
-                    .await()
-
-                // Also update Firebase Auth display name
-                try {
-                    val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
-                        .setDisplayName(fullName.ifBlank { username })
-                        .build()
-                    com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
-                        ?.updateProfile(profileUpdates)?.await()
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to update display name", e)
-                }
-
-                Log.d(TAG, "Profile saved for user $uid")
-                Result.success(Unit)
+                result
             } catch (e: Exception) {
                 Log.w(TAG, "saveUserProfile failed", e)
                 Result.failure(AuthException("Failed to save profile: ${e.message}"))
@@ -238,24 +249,23 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun getSavedProfile(uid: String): Result<User> {
         return withContext(Dispatchers.IO) {
             try {
-                if (firestore == null) {
-                    return@withContext Result.failure(AuthException("Firestore is not available"))
-                }
-                val doc = firestore!!.collection(USERS_COLLECTION).document(uid).get().await()
-                if (doc.exists()) {
-                    val user = User(
-                        userId = uid,
-                        username = doc.getString("username") ?: "",
-                        email = doc.getString("email") ?: "",
-                        fullName = doc.getString("fullName") ?: "",
-                        phone = doc.getString("phone") ?: "",
-                        photoUrl = doc.getString("photoUrl") ?: "",
-                        publicKey = byteArrayOf(),
-                        lastSeen = System.currentTimeMillis()
-                    )
-                    Result.success(user)
-                } else {
-                    Result.failure(AuthException("Profile not found"))
+                withFirestore { db ->
+                    val doc = db.collection(USERS_COLLECTION).document(uid).get().await()
+                    if (doc.exists()) {
+                        val user = User(
+                            userId = uid,
+                            username = doc.getString("username") ?: "",
+                            email = doc.getString("email") ?: "",
+                            fullName = doc.getString("fullName") ?: "",
+                            phone = doc.getString("phone") ?: "",
+                            photoUrl = doc.getString("photoUrl") ?: "",
+                            publicKey = byteArrayOf(),
+                            lastSeen = System.currentTimeMillis()
+                        )
+                        Result.success(user)
+                    } else {
+                        Result.failure(AuthException("Profile not found"))
+                    }
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "getSavedProfile failed", e)

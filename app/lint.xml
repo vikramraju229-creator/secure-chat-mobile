@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Ignore missing translations for now -->
+    <issue id="MissingTranslation" severity="ignore" />
+
+    <!-- Compose: allow experimental APIs -->
+    <issue id="ComposeExperimentalApi" severity="warning" />
+
+    <!-- We deliberately use coroutines in ViewModels -->
+    <issue id="CoroutineCreationDuringComposition" severity="warning" />
+
+    <!-- Allow Java/Kotlin interop warnings -->
+    <issue id="KotlinPropertyAccess" severity="warning" />
+
+    <!-- Deprecation warnings we're aware of -->
+    <issue id="ObsoleteSdkInt" severity="warning" />
+</lint>
