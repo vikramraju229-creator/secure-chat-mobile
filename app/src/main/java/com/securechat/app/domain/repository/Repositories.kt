@@ -8,10 +8,7 @@ interface AuthRepository {
     suspend fun login(email: String, password: String): Result<User>
     fun getCurrentUser(): User?
     fun logout()
-    suspend fun sendEmailVerification(): Result<Unit>
     suspend fun isEmailVerified(): Boolean
-    suspend fun reloadUserAndCheckVerified(): Boolean
-    suspend fun resendVerificationEmail(): Result<Unit>
     suspend fun sendPasswordResetEmail(email: String): Result<Unit>
     suspend fun checkUsernameAvailable(username: String): Result<Boolean>
     suspend fun saveUserProfile(
@@ -23,6 +20,14 @@ interface AuthRepository {
         photoUrl: String
     ): Result<Unit>
     suspend fun getSavedProfile(uid: String): Result<User>
+
+    // ── OTP Email Verification (replaces deprecated Dynamic Links) ──
+    /** Generate a 6-digit OTP and store it in Firestore under users/{uid}/otp. Returns the OTP code. */
+    suspend fun generateAndStoreOtp(uid: String): Result<String>
+    /** Verify the provided OTP code against Firestore. Checks expiry (10 min). */
+    suspend fun verifyOtp(uid: String, code: String): Result<Boolean>
+    /** Resend (regenerate) OTP — generates new code, updates Firestore. */
+    suspend fun resendOtp(uid: String): Result<String>
 }
 
 interface ChatRepository {

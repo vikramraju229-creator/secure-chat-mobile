@@ -64,26 +64,34 @@ class LogoutUseCase @Inject constructor(private val repository: AuthRepository) 
     }
 }
 
-class SendEmailVerificationUseCase @Inject constructor(private val repository: AuthRepository) {
-    suspend operator fun invoke(): Result<Unit> {
-        return repository.sendEmailVerification()
-    }
-}
-
-class CheckEmailVerifiedUseCase @Inject constructor(private val repository: AuthRepository) {
+class GenerateOtpUseCase @Inject constructor(private val repository: AuthRepository) {
     /**
-     * Reloads the Firebase user first to get the latest isEmailVerified status,
-     * then returns the result. This ensures the app picks up verification
-     * immediately after the user clicks the link.
+     * Generates a 6-digit OTP, stores it in Firestore under users/{uid}/otp,
+     * and returns the code. In production this code is sent to the user's email
+     * via a Cloud Function; for development it is logged.
      */
-    suspend operator fun invoke(): Boolean {
-        return repository.reloadUserAndCheckVerified()
+    suspend operator fun invoke(uid: String): Result<String> {
+        return repository.generateAndStoreOtp(uid)
     }
 }
 
-class ResendVerificationEmailUseCase @Inject constructor(private val repository: AuthRepository) {
-    suspend operator fun invoke(): Result<Unit> {
-        return repository.resendVerificationEmail()
+class VerifyOtpUseCase @Inject constructor(private val repository: AuthRepository) {
+    /**
+     * Verifies the provided OTP code against Firestore.
+     * Returns true if correct and not expired.
+     * On success, marks emailVerified in Firestore.
+     */
+    suspend operator fun invoke(uid: String, code: String): Result<Boolean> {
+        return repository.verifyOtp(uid, code)
+    }
+}
+
+class ResendOtpUseCase @Inject constructor(private val repository: AuthRepository) {
+    /**
+     * Generates a fresh OTP and overwrites the previous one in Firestore.
+     */
+    suspend operator fun invoke(uid: String): Result<String> {
+        return repository.resendOtp(uid)
     }
 }
 

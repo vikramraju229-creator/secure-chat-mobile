@@ -11,8 +11,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.securechat.app.presentation.ui.screens.auth.EmailVerificationScreen
 import com.securechat.app.presentation.ui.screens.auth.ForgotPasswordScreen
+import com.securechat.app.presentation.ui.screens.auth.OtpVerificationScreen
 import com.securechat.app.presentation.ui.screens.auth.LoginScreen
 import com.securechat.app.presentation.ui.screens.auth.ProfileSetupScreen
 import com.securechat.app.presentation.ui.screens.auth.RegisterScreen
@@ -46,8 +46,8 @@ fun SecureChatNavGraph(
         composable("register") {
             RegisterScreen(navController = navController)
         }
-        composable("email_verification") {
-            EmailVerificationScreen(navController = navController)
+        composable("otp_verification") {
+            OtpVerificationScreen(navController = navController)
         }
         composable("profile_setup") {
             ProfileSetupScreen(navController = navController)

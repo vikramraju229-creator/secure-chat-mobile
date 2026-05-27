@@ -2,7 +2,6 @@ package com.securechat.app.data.remote
 
 import android.util.Log
 import android.util.Patterns
-import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
@@ -87,17 +86,17 @@ class FirebaseAuthManager(private val auth: FirebaseAuth?) {
         }
     }
 
+    /**
+     * Sends a Firebase email verification (legacy method).
+     * Note: We now use OTP-based verification stored in Firestore.
+     * This method is kept for sending notification emails.
+     */
     suspend fun sendEmailVerification(): Result<Unit> {
         return try {
             val fbAuth = requireAuth()
             val user = fbAuth.currentUser ?: return Result.failure(AuthException("No user is signed in"))
             withContext(Dispatchers.IO) {
-                // Use ActionCodeSettings for better delivery and longer expiry
-                val actionCodeSettings = ActionCodeSettings.newBuilder()
-                    .setHandleCodeInApp(false)
-                    .setUrl("https://chat-8d3c9.firebaseapp.com/__/auth/action")
-                    .build()
-                user.sendEmailVerification(actionCodeSettings).await()
+                user.sendEmailVerification().await()
             }
             Result.success(Unit)
         } catch (e: AuthException) {
@@ -105,25 +104,6 @@ class FirebaseAuthManager(private val auth: FirebaseAuth?) {
         } catch (e: Exception) {
             Log.w(TAG, "sendEmailVerification failed", e)
             Result.failure(AuthException("Failed to send verification email"))
-        }
-    }
-
-    /**
-     * Reloads the current Firebase user and returns the latest isEmailVerified status.
-     * Call this after the user clicks the verification link to get the updated status.
-     */
-    suspend fun reloadUserAndCheckVerified(): Boolean {
-        return try {
-            if (!isFirebaseReady()) return false
-            val user = auth?.currentUser ?: return false
-            withContext(Dispatchers.IO) {
-                user.reload().await()
-            }
-            user.isEmailVerified
-        } catch (e: Exception) {
-            Log.w(TAG, "reloadUser failed", e)
-            // Fall back to cached value
-            auth?.currentUser?.isEmailVerified ?: false
         }
     }
 

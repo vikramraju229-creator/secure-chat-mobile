@@ -49,10 +49,10 @@ fun LoginScreen(navController: NavController) {
         }
     }
 
-    // Navigate to verification if user registered but not yet verified
-    LaunchedEffect(uiState.verificationEmailSent) {
-        if (uiState.verificationEmailSent) {
-            navController.navigate("email_verification") {
+    // Navigate to OTP verification if user registered but not yet verified
+    LaunchedEffect(uiState.otpSent) {
+        if (uiState.otpSent) {
+            navController.navigate("otp_verification") {
                 popUpTo("login") { inclusive = false }
             }
         }
