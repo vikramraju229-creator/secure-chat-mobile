@@ -17,10 +17,10 @@ import kotlinx.coroutines.delay
 /**
  * Email verification screen.
  *
- * Automatically polls verification status every 5 seconds for up to 3 minutes
- * so the app proceeds as soon as the user clicks the link.
+ * User must manually tap "I've Verified My Email" — that calls
+ * FirebaseUser.reload() then checks isEmailVerified.
  *
- * Also includes a 60-second cooldown on the "Resend" button to prevent spam.
+ * Resend button has a 60-second cooldown to prevent spam.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,25 +37,6 @@ fun EmailVerificationScreen(navController: NavController) {
         if (resendCooldown > 0) {
             delay(1000)
             resendCooldown--
-        }
-    }
-
-    // ── Auto-poll every 5 seconds to detect verification ──
-    var autoPollActive by remember { mutableStateOf(true) }
-    LaunchedEffect(autoPollActive) {
-        if (!autoPollActive) return@LaunchedEffect
-        // Poll for up to 3 minutes (36 attempts × 5s)
-        repeat(36) {
-            delay(5000)
-            if (!autoPollActive) return@repeat
-            viewModel.checkEmailVerification()
-        }
-    }
-
-    // Stop polling once verified
-    LaunchedEffect(uiState.needsProfileSetup) {
-        if (uiState.needsProfileSetup) {
-            autoPollActive = false
         }
     }
 
@@ -97,6 +78,7 @@ fun EmailVerificationScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(8.dp))
 
+            // ── Show the email we sent to + spam warning ──
             Text(
                 text = "We sent a verification email to\n${uiState.registrationEmail.ifBlank { "your email" }}",
                 style = MaterialTheme.typography.bodyMedium,
@@ -106,7 +88,7 @@ fun EmailVerificationScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Please verify your email before logging in. Check your inbox and click the verification link.",
+                text = "Please check your inbox and spam folder, then click the verification link.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -141,7 +123,7 @@ fun EmailVerificationScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Verification email resent! Please check your inbox.",
+                        text = "Verification email resent! Please check your inbox (and spam).",
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(12.dp),
@@ -151,22 +133,10 @@ fun EmailVerificationScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // ── Auto-polling indicator ──
-            if (autoPollActive && !uiState.needsProfileSetup) {
-                Text(
-                    text = "Auto-detecting verification status...",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-
             // ── "I've Verified My Email" button ──
+            // Calls FirebaseUser.reload() then checks isEmailVerified.
             Button(
-                onClick = {
-                    autoPollActive = false
-                    viewModel.checkEmailVerification()
-                },
+                onClick = { viewModel.checkEmailVerification() },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 enabled = !uiState.isLoading
             ) {
@@ -206,7 +176,6 @@ fun EmailVerificationScreen(navController: NavController) {
             // ── Back to Login ──
             TextButton(
                 onClick = {
-                    autoPollActive = false
                     viewModel.resetState()
                     navController.navigate("login") {
                         popUpTo("login") { inclusive = true }
@@ -215,27 +184,6 @@ fun EmailVerificationScreen(navController: NavController) {
                 enabled = !uiState.isLoading
             ) {
                 Text("Back to Login")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ── Firebase Console tip (informational only) ──
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Email from \"SecureChat\"? " +
-                           "To fix spam folder issues, " +
-                           "go to Firebase Console → Authentication → Templates → " +
-                           "set Sender Name to \"SecureChat\".",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(12.dp),
-                    textAlign = TextAlign.Center
-                )
             }
         }
     }

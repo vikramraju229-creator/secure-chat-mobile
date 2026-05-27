@@ -101,7 +101,7 @@ class AuthViewModel @Inject constructor(
                                 user = user,
                                 isSuccess = true,
                                 error = null,
-                                emailVerified = true
+                                emailVerified = user.isEmailVerified
                             )
                         }
                     }
@@ -132,11 +132,12 @@ class AuthViewModel @Inject constructor(
                             it.copy(
                                 isLoading = false,
                                 user = user,
-                                isSuccess = true,
+                                isSuccess = false, // DO NOT navigate to main app — must verify email first
                                 error = null,
                                 verificationEmailSent = true,
                                 registrationEmail = user.email,
-                                registeredUserId = user.userId
+                                registeredUserId = user.userId,
+                                emailVerified = false
                             )
                         }
                     }

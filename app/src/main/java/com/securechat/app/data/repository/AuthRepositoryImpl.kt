@@ -94,7 +94,11 @@ class AuthRepositoryImpl @Inject constructor(
 
                 // Check email verification
                 if (!firebaseUser.isEmailVerified) {
-                    return@withContext Result.failure(AuthException("Please verify your email first"))
+                    // Sign out since Firebase signed them in but we're rejecting
+                    firebaseAuthManager.signOut()
+                    return@withContext Result.failure(
+                        AuthException("Please verify your email first. Check your inbox (and spam folder).")
+                    )
                 }
 
                 // Try to get profile from Firestore
