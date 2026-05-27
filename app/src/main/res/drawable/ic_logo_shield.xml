@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SecureChat Shield Logo
+  Dark blue outer shield with light teal fill, containing:
+  - Two connected user profiles
+  - Digital signal arc
+  - Checkmark
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer shield (dark blue outline) -->
+    <path
+        android:fillColor="#0F2A44"
+        android:pathData="M54,4L8,22v24c0,30 16,50 46,60c30,-10 46,-30 46,-60V22L54,4z"/>
+
+    <!-- Inner shield (vibrant cyan/light teal fill) -->
+    <path
+        android:fillColor="#00BCD4"
+        android:pathData="M54,14L18,28v18c0,24 12,40 36,48c24,-8 36,-24 36,-48V28L54,14z"/>
+
+    <!-- Chat bubble inside shield -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,36c-12,0 -22,8 -22,18c0,6 3,11 8,15l-2,8l8,-4c3,1 6,2 8,2c12,0 22,-9 22,-20c0,-10 -10,-18 -22,-18z"/>
+
+    <!-- Dual-user silhouette (two connected profiles) -->
+    <!-- Person 1 (left) -->
+    <path
+        android:fillColor="#0F2A44"
+        android:pathData="M44,48c0,-3 2,-5 5,-5s5,2 5,5s-2,5 -5,5s-5,-2 -5,-5z"/>
+    <path
+        android:fillColor="#0F2A44"
+        android:pathData="M38,60c0,-4 5,-7 11,-7s11,3 11,7"/>
+    <!-- Person 2 (right) -->
+    <path
+        android:fillColor="#0F2A44"
+        android:pathData="M54,52c0,-2.5 2,-4.5 4,-4.5s4,2 4,4.5s-2,4.5 -4,4.5s-4,-2 -4,-4.5z"/>
+    <path
+        android:fillColor="#0F2A44"
+        android:pathData="M50,60c0,-3 4,-5.5 8,-5.5s8,2.5 8,5.5"/>
+
+    <!-- Digital signal arc -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#00D4AA"
+        android:strokeWidth="1.5"
+        android:pathData="M38,68c0,0 6,-8 16,-8s16,8 16,8"/>
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#00D4AA"
+        android:strokeWidth="1"
+        android:pathData="M42,72c0,0 4,-5 12,-5s12,5 12,5"/>
+
+    <!-- Checkmark -->
+    <path
+        android:fillColor="#00D4AA"
+        android:pathData="M48,38l-4,4l6,6l12,-12l-4,-4l-8,8z"/>
+</vector>

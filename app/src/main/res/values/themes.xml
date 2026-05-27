@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.SecureChat" parent="Theme.MaterialComponents.NoActionBar">
-        <item name="colorPrimary">#00a884</item>
-        <item name="colorOnPrimary">#ffffff</item>
-        <item name="colorPrimaryDark">#202c33</item>
-        <item name="android:statusBarColor">#202c33</item>
-        <item name="android:navigationBarColor">#0b141a</item>
+        <!-- Brand colors -->
+        <item name="colorPrimary">#00BCD4</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#0A1C2E</item>
+        <item name="colorSecondary">#48CFCB</item>
+        <item name="colorOnSecondary">#071421</item>
+        <item name="colorSurface">#0D1B2A</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="colorError">#EF5350</item>
+        <item name="colorOnError">#FFFFFF</item>
+        <item name="android:colorBackground">#071421</item>
+        <!-- System bar colors -->
+        <item name="android:statusBarColor">#071421</item>
+        <item name="android:navigationBarColor">#040B14</item>
     </style>
 </resources>

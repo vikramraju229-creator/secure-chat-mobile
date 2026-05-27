@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#00a884</color>
-    <color name="ic_launcher_foreground">#ffffff</color>
+    <!-- Brand - Dark Teal & Navy -->
+    <color name="dark_teal">#0A1C2E</color>
+    <color name="navy_blue">#071421</color>
+    <color name="teal_gradient_start">#0A1C2E</color>
+    <color name="teal_gradient_end">#071421</color>
+
+    <!-- Shield Logo Colors -->
+    <color name="shield_outer">#0F2A44</color>
+    <color name="shield_fill">#00BCD4</color>
+    <color name="chat_bubble_teal">#48CFCB</color>
+    <color name="accent_cyan">#00D4AA</color>
+
+    <!-- UI Colors -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0BEC5</color>
+    <color name="surface_dark">#0D1B2A</color>
+    <color name="surface_card">#122438</color>
+    <color name="input_border">#264653</color>
+    <color name="error_red">#EF5350</color>
+    <color name="status_bar">#071421</color>
+    <color name="nav_bar">#040B14</color>
+
+    <!-- Legacy (retained for launcher) -->
+    <color name="ic_launcher_background">#0A1C2E</color>
+    <color name="ic_launcher_foreground">#00BCD4</color>
 </resources>
